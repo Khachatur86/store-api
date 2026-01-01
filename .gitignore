@@ -29,6 +29,11 @@ env/
 .DS_Store
 Thumbs.db
 
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
 # Project specific
 *.log
 
