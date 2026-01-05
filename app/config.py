@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str = "ecommerce_db"
     
+    # JWT настройки
+    SECRET_KEY: str = "your-secret-key-change-in-production"
+    ALGORITHM: str = "HS256"
+    
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -38,3 +42,7 @@ class Settings(BaseSettings):
 
 # Создаём экземпляр настроек
 settings = Settings()
+
+# Экспортируем для удобства использования в auth.py
+SECRET_KEY = settings.SECRET_KEY
+ALGORITHM = settings.ALGORITHM

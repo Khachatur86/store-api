@@ -29,6 +29,7 @@ class ProductCreate(BaseModel):
     """
     Модель для создания и обновления товара.
     Используется в POST и PUT запросах.
+    seller_id не включается в схему - он берётся из текущего аутентифицированного пользователя.
     """
     name: str = Field(..., min_length=3, max_length=100,
                       description="Название товара (3-100 символов)")
@@ -38,7 +39,6 @@ class ProductCreate(BaseModel):
     image_url: str | None = Field(None, max_length=200, description="URL изображения товара")
     stock: int = Field(..., ge=0, description="Количество товара на складе (0 или больше)")
     category_id: int = Field(..., description="ID категории, к которой относится товар")
-    seller_id: int = Field(..., description="ID продавца (пользователя)")
 
 
 class Product(BaseModel):
