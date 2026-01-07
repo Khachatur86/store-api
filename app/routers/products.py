@@ -5,7 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.products import ProductModel
 from app.models.categories import CategoryModel
 from app.models.users import UserModel
-from app.schemas import Product as ProductSchema, ProductCreate
+from app.models.reviews import ReviewModel
+from app.schemas import Product as ProductSchema, ProductCreate, Review
 from app.db_depends import get_async_db
 from app.auth import get_current_user
 from app.auth import get_current_seller
@@ -118,7 +119,6 @@ async def update_product(
         update(ProductModel).where(ProductModel.id == product_id).values(**product.model_dump())
     )
     await db.commit()
-    # Перезагружаем объект из БД после bulk update для получения актуальных данных
     await db.refresh(db_product)
     return db_product
 
@@ -143,6 +143,41 @@ async def delete_product(
         update(ProductModel).where(ProductModel.id == product_id).values(is_active=False)
     )
     await db.commit()
-    # Перезагружаем объект из БД после bulk update для получения актуального is_active = False
+
     await db.refresh(product)
     return product
+
+@router.get("/{product_id}/reviews/", response_model=list[Review])
+async def get_reviews_by_product(
+    product_id: int,
+    db: AsyncSession = Depends(get_async_db)
+):
+    """
+    Получение отзывов о конкретном товаре.
+    Доступ: Разрешён всем.
+    Возвращает список активных отзывов для указанного товара.
+    """
+    product_result = await db.scalars(
+        select(
+            ProductModel
+        ).where(
+            ProductModel.id == product_id,
+            ProductModel.is_active == True
+        )
+    )
+    product = product_result.first()
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not found or inactive"
+        )
+    
+    reviews_result = await db.scalars(
+        select(
+            ReviewModel
+        ).where(
+            ReviewModel.product_id == product_id,
+            ReviewModel.is_active == True
+        )
+    )
+    return reviews_result.all()
