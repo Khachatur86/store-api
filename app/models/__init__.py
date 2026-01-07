@@ -1,6 +1,6 @@
-from .categories import Category
-from .products import Product
-from .users import User
-from .reviews import Review
+from .categories import CategoryModel
+from .products import ProductModel
+from .users import UserModel
+from .reviews import ReviewModel
 
-__all__ = ["Category", "Product", "User", "Review"]
+__all__ = ["CategoryModel", "ProductModel", "UserModel", "ReviewModel"]

@@ -6,7 +6,7 @@ from sqlalchemy import ForeignKey
 from app.database import Base
 
 
-class Category(Base):
+class CategoryModel(Base):
     __tablename__ = "categories"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -14,13 +14,13 @@ class Category(Base):
     parent_id: Mapped[int | None] = mapped_column(ForeignKey("categories.id"), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    products: Mapped[list["Product"]] = relationship("Product", back_populates="category")
+    products: Mapped[list["ProductModel"]] = relationship("ProductModel", back_populates="category")
 
 
-    parent: Mapped[Optional["Category"]] = relationship("Category",
+    parent: Mapped[Optional["CategoryModel"]] = relationship("CategoryModel",
                                                         back_populates="children",
-                                                        remote_side="Category.id")
-    children: Mapped[list["Category"]] = relationship("Category",
+                                                        remote_side="CategoryModel.id")
+    children: Mapped[list["CategoryModel"]] = relationship("CategoryModel",
                                                       back_populates="parent")
 
 

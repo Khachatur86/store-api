@@ -7,9 +7,9 @@ from starlette import status
 
 from app.auth import get_current_buyer
 from app.db_depends import get_async_db
-from app.models import Product as ProductModel, User as UserModel
+from app.models import ProductModel, UserModel
 from app.schemas import Review, ReviewCreate
-from app.models.reviews import Review as ReviewModel
+from app.models.reviews import ReviewModel
 router = APIRouter(
     prefix="/reviews",
     tags=["Reviews"]

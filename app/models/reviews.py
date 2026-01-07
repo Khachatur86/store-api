@@ -12,7 +12,7 @@ from datetime import datetime
 from sqlalchemy import ForeignKey, Text, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-class Review(Base):
+class ReviewModel(Base):
     __tablename__ = "reviews"
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
@@ -26,5 +26,5 @@ class Review(Base):
     grade: Mapped[int] = mapped_column(nullable=False)
     is_active: Mapped[bool] = mapped_column(nullable=False, default=True)
 
-    user: Mapped["User"] = relationship("User", back_populates="reviews")
-    product: Mapped["Product"] = relationship("Product", back_populates="reviews")
+    user: Mapped["UserModel"] = relationship("UserModel", back_populates="reviews")
+    product: Mapped["ProductModel"] = relationship("ProductModel", back_populates="reviews")

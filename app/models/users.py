@@ -4,7 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
 
-class User(Base):
+class UserModel(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -13,5 +13,5 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     role: Mapped[str] = mapped_column(String, default="buyer")  # "buyer", "seller" or "admin"
 
-    products: Mapped[list["Product"]] = relationship("Product", back_populates="seller")
-    reviews: Mapped[list["Review"]] = relationship("Review", back_populates="user")
+    products: Mapped[list["ProductModel"]] = relationship("ProductModel", back_populates="seller")
+    reviews: Mapped[list["ReviewModel"]] = relationship("ReviewModel", back_populates="user")

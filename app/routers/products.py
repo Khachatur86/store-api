@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.products import Product as ProductModel
-from app.models.categories import Category as CategoryModel
-from app.models.users import User as UserModel
+from app.models.products import ProductModel
+from app.models.categories import CategoryModel
+from app.models.users import UserModel
 from app.schemas import Product as ProductSchema, ProductCreate
 from app.db_depends import get_async_db
 from app.auth import get_current_user
@@ -146,7 +146,3 @@ async def delete_product(
     # Перезагружаем объект из БД после bulk update для получения актуального is_active = False
     await db.refresh(product)
     return product
-
-@router.get("/{product_id}/reviews/")
-async def get_reviews_by_product():
-    ...

@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth import hash_password, verify_password, create_access_token, create_refresh_token
 from app.config import SECRET_KEY, ALGORITHM
 from app.db_depends import get_async_db
-from app.models.users import User as UserModel
+from app.models.users import UserModel
 from app.schemas import RefreshTokenRequest
 from app.schemas import UserCreate, User as UserSchema
 
