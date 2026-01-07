@@ -5,7 +5,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from app.auth import get_current_buyer
+from app.auth import get_current_buyer, get_current_user
 from app.db_depends import get_async_db
 from app.models import ProductModel, UserModel
 from app.schemas import Review, ReviewCreate
@@ -52,6 +52,13 @@ async def create_review(
         db: Annotated[AsyncSession, Depends(get_async_db)],
         buyer: Annotated[UserModel, Depends(get_current_buyer)]
 ):
+    """
+    Создает отзыв
+    :param review_payload: тело запроса отзыва
+    :param db: сесиия базы данных
+    :param buyer:
+    :return:
+    """
     product = await db.get(ProductModel, review_payload.product_id)
 
     if not product or not product.is_active:
@@ -71,9 +78,48 @@ async def create_review(
     return db_review
 
 
-
-
-
 @router.delete("/{review_id}")
-async def delete_review():
-    ...
+async def delete_review(
+        review_id: int,
+        db: Annotated[AsyncSession, Depends(get_async_db)],
+        current_user: Annotated[UserModel, Depends(get_current_user)]
+):
+    """
+    Мягкое удаление отзыва по review_id.
+    Доступ: Автор отзыва или пользователи с ролью "admin".
+    После удаления пересчитывает рейтинг товара.
+    """
+    review: ReviewModel | None = await db.get(ReviewModel, review_id)
+
+    if not review:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Review not found"
+        )
+
+    if not review.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Review is already inactive"
+        )
+
+    is_author = review.user_id == current_user.id
+    is_admin = current_user.role == "admin"
+
+    if not (is_author or is_admin):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to delete this review"
+        )
+
+    product_id: int = int(review.product_id)
+
+    review.is_active = False
+
+    await db.flush()
+
+    await update_product_rating(db, product_id)
+
+    await db.commit()
+
+    return {"message": "Review deleted"}
