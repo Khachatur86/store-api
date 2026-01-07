@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from decimal import Decimal
-from datetime import datetime 
+from datetime import datetime
 
 class CategoryCreate(BaseModel):
     """

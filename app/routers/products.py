@@ -146,3 +146,7 @@ async def delete_product(
     # Перезагружаем объект из БД после bulk update для получения актуального is_active = False
     await db.refresh(product)
     return product
+
+@router.get("/{product_id}/reviews/")
+async def get_reviews_by_product():
+    ...
