@@ -1,7 +1,8 @@
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import String, Boolean, Integer, Numeric, ForeignKey, Float, DateTime, func
+from sqlalchemy import String, Boolean, Integer, Numeric, ForeignKey, Float, DateTime, func, Computed, Index
+from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.sql import text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -29,7 +30,22 @@ class ProductModel(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(),
                                                  onupdate=func.now(), nullable=False)
-
+    tsv: Mapped[TSVECTOR] = mapped_column(
+        TSVECTOR,
+        Computed(
+            """
+            setweight(to_tsvector('english', coalesce(name, '')), 'A')
+            || 
+            setweight(to_tsvector('english', coalesce(description, '')), 'B')
+            """,
+            persisted=True,
+        ),
+        nullable=False,
+    )
     category: Mapped["CategoryModel"] = relationship("CategoryModel", back_populates="products")
     seller: Mapped["UserModel"] = relationship("UserModel", back_populates="products")
     reviews: Mapped[list["ReviewModel"]] = relationship("ReviewModel", back_populates="product")
+
+    __table_args__ = (
+        Index("ix_products_tsv_gin", "tsv", postgresql_using="gin"),
+    )
