@@ -1,6 +1,6 @@
 from enum import Enum
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy import select, update, func
+from sqlalchemy import select, update, func, desc, text, Boolean
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import get_current_seller
@@ -27,34 +27,24 @@ router = APIRouter(
 async def get_all_products(
         page: int = Query(1, ge=1),
         page_size: int = Query(20, ge=1, le=100),
-        category_id: int | None = Query(
-            None, description="ID категории для фильтрации"),
-        min_price: float | None = Query(
-            None, ge=0, description="Минимальная цена товара"),
-        max_price: float | None = Query(
-            None, ge=0, description="Максимальная цена товара"),
-        in_stock: bool | None = Query(
-            None, description="true — только товары в наличии, false — только без остатка"),
-        seller_id: int | None = Query(
-            None, description="ID продавца для фильтрации"),
+        category_id: int | None = Query(None, description="ID категории для фильтрации"),
+        search: str | None = Query(None, min_length=1, description="Поиск по названию/описанию"),
+        min_price: float | None = Query(None, ge=0, description="Минимальная цена товара"),
+        max_price: float | None = Query(None, ge=0, description="Максимальная цена товара"),
+        in_stock: bool | None = Query(None, description="true — только товары в наличии, false — только без остатка"),
+        seller_id: int | None = Query(None, description="ID продавца для фильтрации"),
         sort_by_created: SortOrder | None = Query(
             None,
             description="Сортировка по дате создания: 'desc' (новые сначала) или 'asc' (старые сначала). Если не указано, сортировка по id"
         ),
         db: AsyncSession = Depends(get_async_db),
 ):
-    """
-    Возвращает список всех активных товаров с поддержкой фильтров.
-    Поддерживает сортировку по дате создания.
-    """
-    # Проверка логики min_price <= max_price
     if min_price is not None and max_price is not None and min_price > max_price:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="min_price не может быть больше max_price",
         )
 
-    # Формируем список фильтров
     filters = [ProductModel.is_active == True]
 
     if category_id is not None:
@@ -68,29 +58,47 @@ async def get_all_products(
     if seller_id is not None:
         filters.append(ProductModel.seller_id == seller_id)
 
-    # Подсчёт общего количества с учётом фильтров
+    # Базовый запрос total
     total_stmt = select(func.count()).select_from(ProductModel).where(*filters)
+
+    rank_col = None
+    if search:
+        search_value = search.strip()
+        if search_value:
+            ts_query = func.websearch_to_tsquery('english', search_value)
+            filters.append(ProductModel.tsv.op('@@', return_type=Boolean())(ts_query))
+            rank_col = func.ts_rank_cd(ProductModel.tsv, ts_query).label("rank")
+            total_stmt = select(func.count()).select_from(ProductModel).where(*filters)
+
     total = await db.scalar(total_stmt) or 0
 
-    # Определяем направление сортировки
-    # Если sort_by_created не указан, сортируем по id (по умолчанию)
-    # Если указан, сортируем по created_at в указанном порядке с вторичной сортировкой по id
-    if sort_by_created is None:
-        order_by = [ProductModel.id.asc()]
+    # Определяем сортировку
+    if rank_col is not None:
+        order_by = [desc(rank_col), ProductModel.id]
+        base_stmt = select(ProductModel, rank_col)
     elif sort_by_created == SortOrder.ASC:
         order_by = [ProductModel.created_at.asc(), ProductModel.id.asc()]
-    else:  # sort_by_created == SortOrder.DESC
+        base_stmt = select(ProductModel)
+    elif sort_by_created == SortOrder.DESC:
         order_by = [ProductModel.created_at.desc(), ProductModel.id.desc()]
+        base_stmt = select(ProductModel)
+    else:
+        order_by = [ProductModel.id]
+        base_stmt = select(ProductModel)
 
-    # Выборка товаров с фильтрами, сортировкой и пагинацией
     products_stmt = (
-        select(ProductModel)
+        base_stmt
         .where(*filters)
         .order_by(*order_by)
         .offset((page - 1) * page_size)
         .limit(page_size)
     )
-    items = (await db.scalars(products_stmt)).all()
+
+    if rank_col is not None:
+        result = await db.execute(products_stmt)
+        items = [row[0] for row in result.all()]
+    else:
+        items = (await db.scalars(products_stmt)).all()
 
     return {
         "items": items,
