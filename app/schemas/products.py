@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_serializer
 from decimal import Decimal
+from datetime import datetime
 
 
 class ProductCreate(BaseModel):
@@ -33,5 +34,24 @@ class Product(BaseModel):
     seller_id: int = Field(..., description="ID продавца (пользователя)")
     rating: float = Field(..., ge=0.0, le=5.0, description="Средний рейтинг товара (0.0-5.0)")
     is_active: bool = Field(..., description="Активность товара")
+    created_at: datetime = Field(..., description="Дата и время создания записи")
+    updated_at: datetime = Field(..., description="Дата и время последнего обновления записи")
+
+    @field_serializer('price')
+    def serialize_price(self, value: Decimal) -> float:
+        """Преобразует Decimal в float для корректной сериализации в JSON."""
+        return float(value)
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ProductList(BaseModel):
+    """
+    Список пагинации для товаров.
+    """
+    items: list[Product] = Field(description="Товары для текущей страницы")
+    total: int = Field(ge=0, description="Общее количество товаров")
+    page: int = Field(ge=1, description="Номер текущей страницы")
+    page_size: int = Field(ge=1, description="Количество элементов на странице")
+
+    model_config = ConfigDict(from_attributes=True)  # Для чтения из ORM-объектов
