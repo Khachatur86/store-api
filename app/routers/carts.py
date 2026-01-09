@@ -69,7 +69,7 @@ async def get_cart(
 
     return CartSchema(
         user_id=current_user.id,
-        items=items,
+        items=list(items),  # type: ignore[arg-type] # Pydantic автоматически преобразует CartItemModel в CartItem через from_attributes=True
         total_quantity=total_quantity,
         total_price=total_price_decimal
     )

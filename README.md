@@ -45,6 +45,23 @@ API будет доступно по адресу: http://localhost:8000
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
 
+## Проверка типов
+
+Проект использует [ty](https://github.com/astral-sh/ty) для статической проверки типов:
+
+```bash
+# Установка ty (если еще не установлен)
+uv tool install ty
+
+# Запуск проверки типов
+uv tool run ty check app/models/ app/routers/ app/schemas/ --ignore unresolved-reference
+
+# Или используйте удобный скрипт
+./.ty-check.sh
+```
+
+**Примечание:** `--ignore unresolved-reference` используется для игнорирования forward references в SQLAlchemy моделях (это нормально для циклических зависимостей).
+
 ## Структура проекта
 
 - `app/` - основной код приложения
