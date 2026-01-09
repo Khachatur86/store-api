@@ -1,12 +1,12 @@
-from sqlalchemy.orm import Session
+from collections.abc import AsyncGenerator, Generator
+
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Depends
-from collections.abc import Generator, AsyncGenerator
+from sqlalchemy.orm import Session
 
 from app.database import SessionLocal, async_session_maker
 
 
-def get_db() -> Generator[Session, None, None]:
+def get_db() -> Generator[Session]:
     """
     Зависимость для получения синхронной сессии базы данных.
     Создаёт новую сессию для каждого запроса и закрывает её после обработки.
@@ -18,7 +18,7 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 
-async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
+async def get_async_db() -> AsyncGenerator[AsyncSession]:
     """
     Зависимость для получения асинхронной сессии базы данных.
     Создаёт новую сессию для каждого запроса и закрывает её после обработки.

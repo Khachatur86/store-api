@@ -1,7 +1,7 @@
 from typing import Optional
-from sqlalchemy import String, Boolean
+
+from sqlalchemy import Boolean, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey
 
 from app.database import Base
 
@@ -16,11 +16,7 @@ class CategoryModel(Base):
 
     products: Mapped[list["ProductModel"]] = relationship("ProductModel", back_populates="category")
 
-
-    parent: Mapped[Optional["CategoryModel"]] = relationship("CategoryModel",
-                                                        back_populates="children",
-                                                        remote_side="CategoryModel.id")
-    children: Mapped[list["CategoryModel"]] = relationship("CategoryModel",
-                                                      back_populates="parent")
-
-
+    parent: Mapped[Optional["CategoryModel"]] = relationship(
+        "CategoryModel", back_populates="children", remote_side="CategoryModel.id"
+    )
+    children: Mapped[list["CategoryModel"]] = relationship("CategoryModel", back_populates="parent")

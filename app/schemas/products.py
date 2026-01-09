@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field, ConfigDict, field_serializer
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 
 class ProductCreate(BaseModel):
@@ -9,10 +10,13 @@ class ProductCreate(BaseModel):
     Используется в POST и PUT запросах.
     seller_id не включается в схему - он берётся из текущего аутентифицированного пользователя.
     """
-    name: str = Field(..., min_length=3, max_length=100,
-                      description="Название товара (3-100 символов)")
-    description: str | None = Field(None, max_length=500,
-                                       description="Описание товара (до 500 символов)")
+
+    name: str = Field(
+        ..., min_length=3, max_length=100, description="Название товара (3-100 символов)"
+    )
+    description: str | None = Field(
+        None, max_length=500, description="Описание товара (до 500 символов)"
+    )
     price: Decimal = Field(..., gt=0, description="Цена товара (больше 0)", decimal_places=2)
     image_url: str | None = Field(None, max_length=200, description="URL изображения товара")
     stock: int = Field(..., ge=0, description="Количество товара на складе (0 или больше)")
@@ -24,6 +28,7 @@ class Product(BaseModel):
     Модель для ответа с данными товара.
     Используется в GET-запросах.
     """
+
     id: int = Field(..., description="Уникальный идентификатор товара")
     name: str = Field(..., description="Название товара")
     description: str | None = Field(None, description="Описание товара")
@@ -37,7 +42,7 @@ class Product(BaseModel):
     created_at: datetime = Field(..., description="Дата и время создания записи")
     updated_at: datetime = Field(..., description="Дата и время последнего обновления записи")
 
-    @field_serializer('price')
+    @field_serializer("price")
     def serialize_price(self, value: Decimal) -> float:
         """Преобразует Decimal в float для корректной сериализации в JSON."""
         return float(value)
@@ -49,6 +54,7 @@ class ProductList(BaseModel):
     """
     Список пагинации для товаров.
     """
+
     items: list[Product] = Field(description="Товары для текущей страницы")
     total: int = Field(ge=0, description="Общее количество товаров")
     page: int = Field(ge=1, description="Номер текущей страницы")

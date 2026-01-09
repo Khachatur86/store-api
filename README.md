@@ -62,6 +62,31 @@ uv tool run ty check app/models/ app/routers/ app/schemas/ --ignore unresolved-r
 
 **Примечание:** `--ignore unresolved-reference` используется для игнорирования forward references в SQLAlchemy моделях (это нормально для циклических зависимостей).
 
+## Форматирование и линтинг
+
+Проект использует [Ruff](https://github.com/astral-sh/ruff) для форматирования кода и линтинга:
+
+```bash
+# Проверка кода (без исправлений)
+uv tool run ruff check app/
+
+# Автоматическое исправление проблем
+uv tool run ruff check --fix app/
+
+# Форматирование кода
+uv tool run ruff format app/
+
+# Или используйте удобные скрипты
+./.ruff-check.sh    # Проверка
+./.ruff-fix.sh      # Исправление и форматирование
+```
+
+Ruff автоматически:
+- Форматирует код в стиле Black
+- Сортирует импорты (isort)
+- Находит и исправляет проблемы с кодом
+- Проверяет соответствие PEP 8
+
 ## Структура проекта
 
 - `app/` - основной код приложения

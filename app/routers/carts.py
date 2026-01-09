@@ -1,4 +1,5 @@
 from decimal import Decimal
+
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,15 +9,20 @@ from app.auth import get_current_user
 from app.db_depends import get_async_db
 from app.models.cart_items import CartItemModel
 from app.models.products import ProductModel
-from app.models.users import  UserModel
+from app.models.users import UserModel
 from app.schemas import (
     Cart as CartSchema,
+)
+from app.schemas import (
     CartItem as CartItemSchema,
+)
+from app.schemas import (
     CartItemCreate,
     CartItemUpdate,
 )
 
 router = APIRouter(prefix="/cart", tags=["cart"])
+
 
 async def _ensure_product_available(db: AsyncSession, product_id: int) -> ProductModel:
     result = await db.scalars(
@@ -33,9 +39,8 @@ async def _ensure_product_available(db: AsyncSession, product_id: int) -> Produc
         )
     return product
 
-async def _get_cart_item(
-    db: AsyncSession, user_id: int, product_id: int
-) -> CartItemModel | None:
+
+async def _get_cart_item(db: AsyncSession, user_id: int, product_id: int) -> CartItemModel | None:
     result = await db.scalars(
         select(CartItemModel)
         .options(selectinload(CartItemModel.product))
@@ -45,6 +50,7 @@ async def _get_cart_item(
         )
     )
     return result.first()
+
 
 @router.get("/", response_model=CartSchema)
 async def get_cart(
@@ -61,8 +67,8 @@ async def get_cart(
 
     total_quantity = sum(item.quantity for item in items)
     price_items = (
-        Decimal(item.quantity) *
-        (item.product.price if item.product.price is not None else Decimal("0"))
+        Decimal(item.quantity)
+        * (item.product.price if item.product.price is not None else Decimal("0"))
         for item in items
     )
     total_price_decimal = sum(price_items, Decimal("0"))
@@ -71,8 +77,9 @@ async def get_cart(
         user_id=current_user.id,
         items=list(items),  # type: ignore[arg-type] # Pydantic автоматически преобразует CartItemModel в CartItem через from_attributes=True
         total_quantity=total_quantity,
-        total_price=total_price_decimal
+        total_price=total_price_decimal,
     )
+
 
 @router.post("/items", response_model=CartItemSchema, status_code=status.HTTP_201_CREATED)
 async def add_item_to_cart(
@@ -84,7 +91,7 @@ async def add_item_to_cart(
 
     cart_item = await _get_cart_item(db, current_user.id, payload.product_id)
     new_quantity = cart_item.quantity + payload.quantity if cart_item else payload.quantity
-    
+
     if new_quantity > product.stock:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -105,6 +112,7 @@ async def add_item_to_cart(
     # Перезагружаем cart_item с product для получения актуальных данных
     updated_item = await _get_cart_item(db, current_user.id, payload.product_id)
     return updated_item
+
 
 @router.put("/items/{product_id}", response_model=CartItemSchema)
 async def update_cart_item(
@@ -131,6 +139,7 @@ async def update_cart_item(
     updated_item = await _get_cart_item(db, current_user.id, product_id)
     return updated_item
 
+
 @router.delete("/items/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_item_from_cart(
     product_id: int,
@@ -144,6 +153,7 @@ async def remove_item_from_cart(
     await db.delete(cart_item)
     await db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
 
 @router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
 async def clear_cart(

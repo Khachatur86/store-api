@@ -1,8 +1,8 @@
-from app.schemas.cart_items import CartItem, CartItemCreate, Cart, CartItemUpdate
+from app.schemas.cart_items import Cart, CartItem, CartItemCreate, CartItemUpdate
 from app.schemas.categories import Category, CategoryCreate
 from app.schemas.products import Product, ProductCreate, ProductList
 from app.schemas.reviews import Review, ReviewCreate
-from app.schemas.users import User, UserCreate, RefreshTokenRequest
+from app.schemas.users import RefreshTokenRequest, User, UserCreate
 
 __all__ = [
     "Category",
@@ -18,5 +18,5 @@ __all__ = [
     "CartItem",
     "CartItemCreate",
     "Cart",
-    "CartItemUpdate"
+    "CartItemUpdate",
 ]

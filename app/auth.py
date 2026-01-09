@@ -1,15 +1,15 @@
-from passlib.context import CryptContext
-from fastapi.security import OAuth2PasswordBearer
-from datetime import datetime, timedelta, timezone
-import jwt
+from datetime import UTC, datetime, timedelta
+
 from fastapi import Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.security import OAuth2PasswordBearer
+import jwt
+from passlib.context import CryptContext
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.users import UserModel
-from app.config import SECRET_KEY, ALGORITHM
+from app.config import ALGORITHM, SECRET_KEY
 from app.db_depends import get_async_db
-
+from app.models.users import UserModel
 
 # Создаём контекст для хеширования с использованием bcrypt
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -17,6 +17,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/token")
+
 
 def hash_password(password: str) -> str:
     """
@@ -37,11 +38,13 @@ def create_access_token(data: dict):
     Создаёт access-токен.
     """
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({
-        "exp": expire,
-        "token_type": "access",
-    })
+    expire = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update(
+        {
+            "exp": expire,
+            "token_type": "access",
+        }
+    )
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
@@ -50,15 +53,19 @@ def create_refresh_token(data: dict):
     Создаёт refresh-токен с длительным сроком действия и token_type="refresh".
     """
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    to_encode.update({
-        "exp": expire,
-        "token_type": "refresh",
-    })
+    expire = datetime.now(UTC) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    to_encode.update(
+        {
+            "exp": expire,
+            "token_type": "refresh",
+        }
+    )
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-async def get_current_user(token: str = Depends(oauth2_scheme),
-                           db: AsyncSession = Depends(get_async_db)):
+
+async def get_current_user(
+    token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_async_db)
+):
     """
     Проверяет JWT access-токен и возвращает пользователя из базы.
     Проверяет, что токен имеет тип "access".
@@ -72,10 +79,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme),
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         token_type: str | None = payload.get("token_type")
-        
+
         if email is None:
             raise credentials_exception
-        
+
         # Проверяем, что токен имеет тип "access"
         if token_type != "access":
             raise HTTPException(
@@ -92,11 +99,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme),
     except jwt.PyJWTError:
         raise credentials_exception
     result = await db.scalars(
-        select(UserModel).where(UserModel.email == email, UserModel.is_active == True))
+        select(UserModel).where(UserModel.email == email, UserModel.is_active == True)
+    )
     user = result.first()
     if user is None:
         raise credentials_exception
     return user
+
 
 async def get_current_seller(current_user: UserModel = Depends(get_current_user)):
     """
@@ -104,10 +113,10 @@ async def get_current_seller(current_user: UserModel = Depends(get_current_user)
     """
     if not current_user.role or current_user.role != "seller":
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only sellers can perform this action"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Only sellers can perform this action"
         )
     return current_user
+
 
 async def get_current_admin(current_user: UserModel = Depends(get_current_user)):
     """
@@ -116,9 +125,10 @@ async def get_current_admin(current_user: UserModel = Depends(get_current_user))
     if not current_user.role or current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only administrators can perform this action"
+            detail="Only administrators can perform this action",
         )
     return current_user
+
 
 async def get_current_buyer(current_user: UserModel = Depends(get_current_user)):
     """
@@ -126,7 +136,6 @@ async def get_current_buyer(current_user: UserModel = Depends(get_current_user))
     """
     if not current_user.role or current_user.role != "buyer":
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only buyers can perform this action"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Only buyers can perform this action"
         )
     return current_user
