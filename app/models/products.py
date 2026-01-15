@@ -59,5 +59,6 @@ class ProductModel(Base):
     cart_items: Mapped[list["CartItemModel"]] = relationship(
         "CartItemModel", back_populates="product", cascade="all, delete-orphan"
     )
+    order_items: Mapped[list["OrderItemModel"]] = relationship("OrderItemModel", back_populates="product")
 
     __table_args__ = (Index("ix_products_tsv_gin", "tsv", postgresql_using="gin"),)
