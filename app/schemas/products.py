@@ -4,7 +4,7 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 
-class ProductCreate(BaseModel):
+class ProductCreateSchema(BaseModel):
     """
     Модель для создания и обновления товара.
     Используется в POST и PUT запросах.
@@ -23,7 +23,7 @@ class ProductCreate(BaseModel):
     category_id: int = Field(..., description="ID категории, к которой относится товар")
 
 
-class Product(BaseModel):
+class ProductSchema(BaseModel):
     """
     Модель для ответа с данными товара.
     Используется в GET-запросах.
@@ -50,12 +50,12 @@ class Product(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class ProductList(BaseModel):
+class ProductListSchema(BaseModel):
     """
     Список пагинации для товаров.
     """
 
-    items: list[Product] = Field(description="Товары для текущей страницы")
+    items: list[ProductSchema] = Field(description="Товары для текущей страницы")
     total: int = Field(ge=0, description="Общее количество товаров")
     page: int = Field(ge=1, description="Номер текущей страницы")
     page_size: int = Field(ge=1, description="Количество элементов на странице")

@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class ReviewCreate(BaseModel):
+class ReviewCreateSchema(BaseModel):
     """
     Модель для создания отзыва
     """
@@ -17,7 +17,7 @@ class ReviewCreate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class Review(BaseModel):
+class ReviewSchema(BaseModel):
     """
     Модель для ответа с данными отзыва.
     """

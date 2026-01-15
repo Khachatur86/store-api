@@ -10,8 +10,12 @@ from app.models.categories import CategoryModel
 from app.models.products import ProductModel
 from app.models.reviews import ReviewModel
 from app.models.users import UserModel
-from app.schemas import Product as ProductSchema
-from app.schemas import ProductCreate, ProductList, Review
+from app.schemas import (
+    ProductCreateSchema,
+    ProductListSchema,
+    ProductSchema,
+    ReviewSchema,
+)
 
 
 class SortOrder(str, Enum):
@@ -26,7 +30,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=ProductList)
+@router.get("/", response_model=ProductListSchema)
 async def get_all_products(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -114,7 +118,7 @@ async def get_all_products(
 
 @router.post("/", response_model=ProductSchema, status_code=status.HTTP_201_CREATED)
 async def create_product(
-    product: ProductCreate,
+    product: ProductCreateSchema,
     db: AsyncSession = Depends(get_async_db),
     current_user: UserModel = Depends(get_current_seller),
 ):
@@ -196,7 +200,7 @@ async def get_product(product_id: int, db: AsyncSession = Depends(get_async_db))
 @router.put("/{product_id}", response_model=ProductSchema)
 async def update_product(
     product_id: int,
-    product: ProductCreate,
+    product: ProductCreateSchema,
     db: AsyncSession = Depends(get_async_db),
     current_user: UserModel = Depends(get_current_seller),
 ):
@@ -260,7 +264,7 @@ async def delete_product(
     return product
 
 
-@router.get("/{product_id}/reviews/", response_model=list[Review])
+@router.get("/{product_id}/reviews/", response_model=list[ReviewSchema])
 async def get_reviews_by_product(product_id: int, db: AsyncSession = Depends(get_async_db)):
     """
     Получение отзывов о конкретном товаре.

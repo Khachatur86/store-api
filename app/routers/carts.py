@@ -11,14 +11,10 @@ from app.models.cart_items import CartItemModel
 from app.models.products import ProductModel
 from app.models.users import UserModel
 from app.schemas import (
-    Cart as CartSchema,
-)
-from app.schemas import (
-    CartItem as CartItemSchema,
-)
-from app.schemas import (
-    CartItemCreate,
-    CartItemUpdate,
+    CartItemCreateSchema,
+    CartItemSchema,
+    CartItemUpdateSchema,
+    CartSchema,
 )
 
 router = APIRouter(prefix="/cart", tags=["cart"])
@@ -83,7 +79,7 @@ async def get_cart(
 
 @router.post("/items", response_model=CartItemSchema, status_code=status.HTTP_201_CREATED)
 async def add_item_to_cart(
-    payload: CartItemCreate,
+    payload: CartItemCreateSchema,
     db: AsyncSession = Depends(get_async_db),
     current_user: UserModel = Depends(get_current_user),
 ):
@@ -117,7 +113,7 @@ async def add_item_to_cart(
 @router.put("/items/{product_id}", response_model=CartItemSchema)
 async def update_cart_item(
     product_id: int,
-    payload: CartItemUpdate,
+    payload: CartItemUpdateSchema,
     db: AsyncSession = Depends(get_async_db),
     current_user: UserModel = Depends(get_current_user),
 ):

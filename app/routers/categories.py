@@ -5,8 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth import get_current_admin
 from app.db_depends import get_async_db
 from app.models.categories import CategoryModel
-from app.schemas import Category as CategorySchema
-from app.schemas import CategoryCreate
+from app.schemas import CategoryCreateSchema, CategorySchema
 
 # Создаём маршрутизатор с префиксом и тегом
 router = APIRouter(
@@ -31,7 +30,7 @@ async def get_all_categories(db: AsyncSession = Depends(get_async_db)):
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(get_current_admin)],
 )
-async def create_category(category: CategoryCreate, db: AsyncSession = Depends(get_async_db)):
+async def create_category(category: CategoryCreateSchema, db: AsyncSession = Depends(get_async_db)):
     """
     Создаёт новую категорию (только для администраторов).
     """
@@ -56,7 +55,9 @@ async def create_category(category: CategoryCreate, db: AsyncSession = Depends(g
     "/{category_id}", response_model=CategorySchema, dependencies=[Depends(get_current_admin)]
 )
 async def update_category(
-    category_id: int, category: CategoryCreate, db: AsyncSession = Depends(get_async_db)
+    category_id: int,
+    category: CategoryCreateSchema,
+    db: AsyncSession = Depends(get_async_db),
 ):
     """
     Обновляет категорию по её ID (только для администраторов).

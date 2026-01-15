@@ -8,14 +8,13 @@ from app.auth import create_access_token, create_refresh_token, hash_password, v
 from app.config import ALGORITHM, SECRET_KEY
 from app.db_depends import get_async_db
 from app.models.users import UserModel
-from app.schemas import RefreshTokenRequest, UserCreate
-from app.schemas import User as UserSchema
+from app.schemas import RefreshTokenRequestSchema, UserCreateSchema, UserSchema
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.post("/", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
-async def create_user(user: UserCreate, db: AsyncSession = Depends(get_async_db)):
+async def create_user(user: UserCreateSchema, db: AsyncSession = Depends(get_async_db)):
     """
     Регистрирует нового пользователя с ролью 'buyer' или 'seller'.
     """
@@ -61,7 +60,7 @@ async def login(
 
 @router.post("/refresh-token")
 async def refresh_token(
-    body: RefreshTokenRequest,
+    body: RefreshTokenRequestSchema,
     db: AsyncSession = Depends(get_async_db),
 ):
     """

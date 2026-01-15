@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.schemas.products import Product
+from app.schemas.products import ProductSchema
 
 
 class OrderItemSchema(BaseModel):
@@ -12,7 +12,7 @@ class OrderItemSchema(BaseModel):
     quantity: int = Field(..., description="Количество", ge=1)
     unit_price: Decimal = Field(..., description="Цена за единицу на момент покупки", ge=0)
     total_price: Decimal = Field(..., ge=0, description="Сумма по позиции")
-    product: Product | None = Field(None, description="Полная информация о товаре")
+    product: ProductSchema | None = Field(None, description="Полная информация о товаре")
 
     model_config = ConfigDict(from_attributes=True)
 

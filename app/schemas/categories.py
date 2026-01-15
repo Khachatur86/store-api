@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class CategoryCreate(BaseModel):
+class CategoryCreateSchema(BaseModel):
     """
     Модель для создания и обновления категории.
     Используется в POST и PUT запросах.
@@ -13,7 +13,7 @@ class CategoryCreate(BaseModel):
     parent_id: int | None = Field(None, description="ID родительской категории, если есть")
 
 
-class Category(BaseModel):
+class CategorySchema(BaseModel):
     """
     Модель для ответа с данными категории.
     Используется в GET-запросах.

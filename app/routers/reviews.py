@@ -9,7 +9,7 @@ from app.auth import get_current_buyer, get_current_user
 from app.db_depends import get_async_db
 from app.models import ProductModel, UserModel
 from app.models.reviews import ReviewModel
-from app.schemas import Review, ReviewCreate
+from app.schemas import ReviewCreateSchema, ReviewSchema
 
 router = APIRouter(prefix="/reviews", tags=["Reviews"])
 
@@ -31,7 +31,7 @@ async def update_product_rating(db: AsyncSession, product_id: int):
         product.rating = float(avg_rating)
 
 
-@router.get("/", response_model=list[Review])
+@router.get("/", response_model=list[ReviewSchema])
 async def get_reviews(db: Annotated[AsyncSession, Depends(get_async_db)]):
     """
     Возвращает список всех активных отзывов
@@ -40,9 +40,9 @@ async def get_reviews(db: Annotated[AsyncSession, Depends(get_async_db)]):
     return (await db.scalars(reviews_stmt)).all()
 
 
-@router.post("/", response_model=Review)
+@router.post("/", response_model=ReviewSchema)
 async def create_review(
-    review_payload: ReviewCreate,
+    review_payload: ReviewCreateSchema,
     db: Annotated[AsyncSession, Depends(get_async_db)],
     buyer: Annotated[UserModel, Depends(get_current_buyer)],
 ):
